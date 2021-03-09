@@ -11,10 +11,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.liveData
@@ -86,7 +83,7 @@ class NFCWriterActivity : AppCompatActivity() {
 
         btnConfirm.setOnClickListener {
             val name = "" + inputName.text + " " + inputLastName.text
-            val site = inputSite.text.toString()
+            val site = spinnerCentre.selectedItem.toString()
             //TODO: update when datepicker is setup
             val date = Date()
             createMeeting(name, site, date).observe(this, Observer { it ->
