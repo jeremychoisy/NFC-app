@@ -2,12 +2,23 @@ package com.mbds.android.nfc.code
 
 import android.app.Activity
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.DrawableContainer
 import android.nfc.*
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.AttributeSet
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -18,6 +29,11 @@ import java.util.*
 class NFCWriterActivity : Activity() {
     private var nfcAdapter: NfcAdapter? = null
     private var pendingIntent: PendingIntent? = null
+
+    lateinit var btnConfirm: Button
+    lateinit var inputName: EditText
+    lateinit var inputLastName: EditText
+    lateinit var labelText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +48,43 @@ class NFCWriterActivity : Activity() {
         pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0)
         // single top flag avoids activity multiple instances launching
 
-//        findViewById<View>()
+        btnConfirm = findViewById<Button>(R.id.btn_confirm_rdv)
+        inputName = findViewById<EditText>(R.id.input_name)
+        inputLastName = findViewById<EditText>(R.id.input_lastname)
+        labelText = findViewById<TextView>(R.id.txtView1)
+
+
+        btnConfirm.isEnabled = false
+        labelText.visibility = View.INVISIBLE
+
+
+        addCheckInputEvent(inputName)
+        addCheckInputEvent(inputLastName)
+
+        btnConfirm.setOnClickListener {
+            Log.d("btn", "btn debug")
+            labelText.visibility = View.VISIBLE
+        }
+
+    }
+
+
+
+    fun addCheckInputEvent(edittext: EditText) {
+        edittext.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun afterTextChanged(p0: Editable?) {
+                labelText.visibility = View.INVISIBLE
+                checkForm()
+            }
+        })
     }
 
     override fun onResume() {
@@ -55,6 +107,17 @@ class NFCWriterActivity : Activity() {
             nfcAdapter!!.disableForegroundDispatch(this)
         }
     }
+
+    fun checkForm(): Boolean {
+        if (inputLastName.text.toString() != "" && inputName.text.toString() != "") {
+            btnConfirm.isEnabled = true
+            return true;
+        }
+        btnConfirm.isEnabled = false
+        //TODO Update message
+        return false;
+    }
+
 
     public override fun onNewIntent(intent: Intent) {
 
@@ -85,8 +148,8 @@ class NFCWriterActivity : Activity() {
             val msgTxt = "Hello world!"
             val mimeType = "application/mbds.android.nfc" // your MIME type
             ndefRecord = NdefRecord.createMime(
-                mimeType,
-                msgTxt.toByteArray(Charset.forName("US-ASCII"))
+                    mimeType,
+                    msgTxt.toByteArray(Charset.forName("US-ASCII"))
             )
             // NDEF record URI type
             ndefRecord = NdefRecord.createUri(uriTxt)
@@ -110,9 +173,9 @@ class NFCWriterActivity : Activity() {
                 payload.write((langeSize and 0x1F))
                 payload.write(lang, 0, langeSize)
                 ndefRecord = NdefRecord(
-                    NdefRecord.TNF_WELL_KNOWN,
-                    NdefRecord.RTD_TEXT, ByteArray(0),
-                    payload.toByteArray()
+                        NdefRecord.TNF_WELL_KNOWN,
+                        NdefRecord.RTD_TEXT, ByteArray(0),
+                        payload.toByteArray()
                 )
             } catch (e: UnsupportedEncodingException) {
                 e.printStackTrace()
