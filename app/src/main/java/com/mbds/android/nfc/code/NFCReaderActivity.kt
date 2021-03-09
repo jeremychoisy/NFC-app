@@ -1,6 +1,5 @@
 package com.mbds.android.nfc.code
 
-import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.nfc.NdefMessage
@@ -9,10 +8,19 @@ import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.liveData
+import com.mbds.android.nfc.code.api.repositories.MeetingRepository
+import com.mbds.android.nfc.code.models.Resource
+import com.mbds.android.nfc.code.models.Status
+import kotlinx.coroutines.Dispatchers
 import java.io.UnsupportedEncodingException
 import kotlin.experimental.and
 
-class NFCReaderActivity : Activity() {
+class NFCReaderActivity : AppCompatActivity() {
+    private val repository = MeetingRepository()
+
     private var nfcAdapter: NfcAdapter? = null
     private var pendingIntent: PendingIntent? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,8 +65,17 @@ class NFCReaderActivity : Activity() {
         nfcAdapter?.disableForegroundDispatch(this)
     }
 
-    public override fun onNewIntent(intent: Intent) {
+    private fun fetchMeeting(id: String) = liveData(Dispatchers.IO) {
+        emit(Resource.loading(data = null))
+        try {
+            emit(Resource.success(data = repository.get(id)))
+        } catch (exception: Exception) {
+            emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
+        }
+    }
 
+    public override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
         // Get the Tag object:
         // ===================
         // retrieve the action from the received intent
@@ -113,33 +130,21 @@ class NFCReaderActivity : Activity() {
                                 payload, languageSize + 1,
                                 payload.size - languageSize - 1, charset(encoding)
                             )
-                            message = "$message, NDEF MESSAGE : $recordTxt"
+                            fetchMeeting(recordTxt).observe(this, Observer { it ->
+                                it?.let { resource ->
+                                    when (resource.status) {
+                                        Status.SUCCESS -> {
+                                            Toast.makeText(this, "Rendez vous validé", Toast.LENGTH_SHORT).show()
+                                        }
+                                        Status.ERROR -> {
+                                            Toast.makeText(this, "Rendez vous non-validé", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            })
                         } catch (e: UnsupportedEncodingException) {
                             e.printStackTrace()
                         }
-                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-
-                        /*                       //check NDEF record TNF:
-                        //======================
-                        switch(ndefRecord.getTnf()) {
-                            case NdefRecord.TNF_ABSOLUTE_URI:
-                                // manage NDEF record as an URI object
-                                break;
-                            case NdefRecord.TNF_EXTERNAL_TYPE:
-                                // manage NDEF record as an URN (<domain_name>:<service_name>)
-                                break;
-                            case NdefRecord.TNF_MIME_MEDIA:
-                                // manage NDEF record as the MIME type is:
-                                // picture, video, sound, JSON, etc…
-                                break;
-                            case NdefRecord.TNF_WELL_KNOWN:
-                                // manage NDEF record as the type is:
-                                // contact (business card), phone number, email…
-                                break;
-                            default:
-                                // manage NDEF record as text…
-                        }
-*/
                     }
                 }
             }

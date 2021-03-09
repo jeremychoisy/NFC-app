@@ -2,14 +2,25 @@ package com.mbds.android.nfc.code
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
+import androidx.lifecycle.liveData
+import com.mbds.android.nfc.code.api.repositories.MeetingRepository
 import com.mbds.android.nfc.code.databinding.ActivityMainBinding
+import com.mbds.android.nfc.code.models.Resource
+import com.mbds.android.nfc.code.models.Status.*
+import kotlinx.coroutines.Dispatchers
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val repository = MeetingRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
