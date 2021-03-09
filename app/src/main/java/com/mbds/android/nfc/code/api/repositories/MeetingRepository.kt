@@ -18,6 +18,7 @@ class MeetingRepository {
         service = retrofit.create(MeetingService::class.java)
     }
 
-    suspend fun get(id: String): MeetingResponse = service.list(id)
+    suspend fun get(id: String): MeetingResponse = service.get(id)
+    suspend fun delete(id: String): Void = service.delete(id)
     suspend fun create(name: RequestBody, site: RequestBody, date: RequestBody): MeetingResponse = service.create(name, site, date)
 }

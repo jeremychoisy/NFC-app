@@ -74,6 +74,14 @@ class NFCReaderActivity : AppCompatActivity() {
         }
     }
 
+    private fun deleteMeeting(id: String) = liveData(Dispatchers.IO) {
+        try {
+            emit(Resource.success(data = repository.delete(id)))
+        } catch (exception: Exception) {
+            emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
+        }
+    }
+
     public override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Get the Tag object:
@@ -130,14 +138,27 @@ class NFCReaderActivity : AppCompatActivity() {
                                 payload, languageSize + 1,
                                 payload.size - languageSize - 1, charset(encoding)
                             )
-                            fetchMeeting(recordTxt).observe(this, Observer { it ->
+                            val fetchMeeting = fetchMeeting(recordTxt)
+                            fetchMeeting.observe(this, Observer { it ->
                                 it?.let { resource ->
                                     when (resource.status) {
                                         Status.SUCCESS -> {
-                                            Toast.makeText(this, "Rendez vous validé", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(this, "Rendez-vous valide", Toast.LENGTH_SHORT).show()
+                                            deleteMeeting(recordTxt).observe(this, Observer {
+                                                if(resource.status == Status.SUCCESS) {
+                                                    Toast.makeText(this, "Accès révoqué", Toast.LENGTH_SHORT).show()
+                                                    // TODO: Hide spinner
+                                                } else {
+                                                    Toast.makeText(this, "Échec de la suppression du rendez-vous", Toast.LENGTH_SHORT).show()
+                                                    // TODO: Hide spinner
+                                                }
+                                            })
                                         }
                                         Status.ERROR -> {
-                                            Toast.makeText(this, "Rendez vous non-validé", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(this, "Rendez-vous non valide", Toast.LENGTH_SHORT).show()
+                                        }
+                                        Status.LOADING -> {
+                                            // TODO: Show spinner
                                         }
                                     }
                                 }

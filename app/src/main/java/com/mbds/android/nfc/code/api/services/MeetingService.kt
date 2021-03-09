@@ -6,7 +6,10 @@ import retrofit2.http.*
 
 interface MeetingService {
     @GET("meeting/{id}")
-    suspend fun list(@Path("id") id: String): MeetingResponse
+    suspend fun get(@Path("id") id: String): MeetingResponse
+
+    @DELETE("meeting/{id}")
+    suspend fun delete(@Path("id") id: String): Void
 
     @Multipart
     @POST("meeting")

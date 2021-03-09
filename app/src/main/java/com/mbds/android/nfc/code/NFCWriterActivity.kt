@@ -1,6 +1,5 @@
 package com.mbds.android.nfc.code
 
-import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.nfc.*
@@ -9,7 +8,6 @@ import android.nfc.tech.NdefFormatable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -82,7 +80,7 @@ class NFCWriterActivity : AppCompatActivity() {
         addCheckInputEvent(inputLastName)
 
         btnConfirm.setOnClickListener {
-            val name = "" + inputName.text + " " + inputLastName.text
+            val name = "" + inputName.text.trim() + " " + inputLastName.text.trim()
             val site = spinnerCentre.selectedItem.toString()
             //TODO: update when datepicker is setup
             val date = Date()
