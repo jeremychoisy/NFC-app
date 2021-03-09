@@ -62,23 +62,6 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_name" />
 
-
-    <!--        <DatePicker-->
-    <!--            android:id="@+id/date_picker"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:calendarViewShown="true"-->
-    <!--            android:spinnersShown="false"-->
-    <!--            android:layout_weight="4"-->
-    <!--            android:layout_height="0dp"-->
-    <!--            app:layout_constraintTop_toBottomOf="@+id/input_lastname"/>-->
-
-    <!--        <TimePicker-->
-    <!--            android:id="@+id/time_picker"-->
-    <!--            android:layout_weight="4"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="0dp"-->
-    <!--            app:layout_constraintTop_toBottomOf="@+id/date_picker"/>-->
-
     <Spinner
         android:id="@+id/spinner_centre"
         android:layout_width="match_parent"
@@ -87,6 +70,34 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_lastname" />
 
+    <EditText
+        android:id="@+id/input_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:focusable="false"
+        android:hint="Choisir une date..."
+        android:inputType="date"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinner_centre" />
+
+    <EditText
+        android:id="@+id/input_heure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:focusable="false"
+        android:hint="Choisir une heure..."
+        android:inputType="date"
+        app:layout_constraintBottom_toTopOf="@+id/btn_confirm_rdv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/input_date" />
+
     <Button
         android:id="@+id/btn_confirm_rdv"
         android:layout_width="wrap_content"
@@ -94,7 +105,7 @@
         android:text="@string/confim_rdv"
         app:layout_constraintBottom_toTopOf="@+id/txtView1"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/input_date" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

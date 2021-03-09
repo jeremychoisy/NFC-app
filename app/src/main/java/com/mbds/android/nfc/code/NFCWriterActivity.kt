@@ -1,6 +1,8 @@
 package com.mbds.android.nfc.code
 
 import android.app.PendingIntent
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.nfc.*
 import android.nfc.tech.Ndef
@@ -20,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.IOException
-import java.util.Date
+import java.util.*
 
 class NFCWriterActivity : AppCompatActivity() {
     private val repository = MeetingRepository()
@@ -32,8 +34,12 @@ class NFCWriterActivity : AppCompatActivity() {
     lateinit var btnConfirm: Button
     lateinit var inputName: EditText
     lateinit var inputLastName: EditText
+    lateinit var inputDate: EditText
+    lateinit var inputHeure: EditText
     lateinit var labelText: TextView
     lateinit var spinnerCentre: Spinner
+    var datePickerDialog: DatePickerDialog? = null
+    var timePickerDialog: TimePickerDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +57,8 @@ class NFCWriterActivity : AppCompatActivity() {
         btnConfirm = findViewById<Button>(R.id.btn_confirm_rdv)
         inputName = findViewById<EditText>(R.id.input_name)
         inputLastName = findViewById<EditText>(R.id.input_lastname)
+        inputDate = findViewById<EditText>(R.id.input_date)
+        inputHeure = findViewById<EditText>(R.id.input_heure)
         labelText = findViewById<TextView>(R.id.txtView1)
         spinnerCentre = findViewById<Spinner>(R.id.spinner_centre)
 
@@ -61,16 +69,33 @@ class NFCWriterActivity : AppCompatActivity() {
         var adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, list)
         spinnerCentre.adapter = adapter
 
-//        spinnerCentre.onItemClickListener()
+        inputDate.setOnClickListener(View.OnClickListener {
+            val c = Calendar.getInstance()
+            val mYear = c[Calendar.YEAR]
+            val mMonth = c[Calendar.MONTH]
+            val mDay = c[Calendar.DAY_OF_MONTH]
+            datePickerDialog = DatePickerDialog(this@NFCWriterActivity,
+                    object : DatePickerDialog.OnDateSetListener {
+                        override fun onDateSet(view: DatePicker?, year: Int,
+                                               monthOfYear: Int, dayOfMonth: Int) {
+                            inputDate.setText(dayOfMonth.toString() + "/"
+                                    + (monthOfYear + 1) + "/" + year)
+                        }
+                    }, mYear, mMonth, mDay)
+            datePickerDialog!!.show()
+        })
 
-//        spinnerCentre.setOnItemSelectedListener(object : OnItemSelectedListener {
-//            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View, arg2: Int, arg3: Long) {
-//                val items: String = spinnerCentre.getSelectedItem().toString()
-//                Log.i("Selected item : ", items)
-//            }
-//
-//            override fun onNothingSelected(arg0: AdapterView<*>?) {}
-//        })
+        inputHeure.setOnClickListener(View.OnClickListener {
+            val c = Calendar.getInstance()
+            val mHour = c[Calendar.HOUR_OF_DAY]
+            val mMinute = c[Calendar.MINUTE]
+            timePickerDialog = TimePickerDialog(this@NFCWriterActivity,
+                    TimePickerDialog.OnTimeSetListener {
+                        view, hour, minute -> inputHeure.setText("$hour:$minute")
+                    }, mHour, mMinute, false)
+            timePickerDialog!!.show()
+        })
+
 
         btnConfirm.isEnabled = false
         labelText.visibility = View.INVISIBLE
