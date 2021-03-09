@@ -7,6 +7,7 @@ import android.nfc.*
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -17,6 +18,7 @@ import java.util.*
 class NFCWriterActivity : Activity() {
     private var nfcAdapter: NfcAdapter? = null
     private var pendingIntent: PendingIntent? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.write_tag_layout)
@@ -29,6 +31,8 @@ class NFCWriterActivity : Activity() {
         }
         pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0)
         // single top flag avoids activity multiple instances launching
+
+//        findViewById<View>()
     }
 
     override fun onResume() {

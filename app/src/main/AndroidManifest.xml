@@ -39,7 +39,7 @@
 
         <activity
             android:name=".NFCReaderActivity"
-            android:label="@string/nfc_read_tag"
+            android:label="@string/verif_ident"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
@@ -51,7 +51,7 @@
 
         <activity
             android:name=".NFCWriterActivity"
-            android:label="@string/nfc_write_ndef"
+            android:label="@string/nfc_prise_rdv"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
