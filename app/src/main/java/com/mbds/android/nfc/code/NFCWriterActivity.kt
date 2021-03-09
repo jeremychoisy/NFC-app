@@ -2,29 +2,23 @@ package com.mbds.android.nfc.code
 
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.DrawableContainer
 import android.nfc.*
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.AttributeSet
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
+import android.widget.AdapterView.OnItemSelectedListener
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 import java.util.*
+
 
 class NFCWriterActivity : Activity() {
     private var nfcAdapter: NfcAdapter? = null
@@ -34,6 +28,7 @@ class NFCWriterActivity : Activity() {
     lateinit var inputName: EditText
     lateinit var inputLastName: EditText
     lateinit var labelText: TextView
+    lateinit var spinnerCentre: Spinner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +47,25 @@ class NFCWriterActivity : Activity() {
         inputName = findViewById<EditText>(R.id.input_name)
         inputLastName = findViewById<EditText>(R.id.input_lastname)
         labelText = findViewById<TextView>(R.id.txtView1)
+        spinnerCentre = findViewById<Spinner>(R.id.spinner_centre)
 
+        var list = arrayOf("Service de vaccination, Nice",
+                "Maison des associations, Antibes",
+                "Centre de santé, Marseille")
+
+        var adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, list)
+        spinnerCentre.adapter = adapter
+
+//        spinnerCentre.onItemClickListener()
+
+//        spinnerCentre.setOnItemSelectedListener(object : OnItemSelectedListener {
+//            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View, arg2: Int, arg3: Long) {
+//                val items: String = spinnerCentre.getSelectedItem().toString()
+//                Log.i("Selected item : ", items)
+//            }
+//
+//            override fun onNothingSelected(arg0: AdapterView<*>?) {}
+//        })
 
         btnConfirm.isEnabled = false
         labelText.visibility = View.INVISIBLE
@@ -62,13 +75,12 @@ class NFCWriterActivity : Activity() {
         addCheckInputEvent(inputLastName)
 
         btnConfirm.setOnClickListener {
-            Log.d("btn", "btn debug")
+            Log.i("spinner", spinnerCentre.selectedItem.toString())
             labelText.visibility = View.VISIBLE
+            nfcCall()
         }
 
     }
-
-
 
     fun addCheckInputEvent(edittext: EditText) {
         edittext.addTextChangedListener(object : TextWatcher {
@@ -118,9 +130,7 @@ class NFCWriterActivity : Activity() {
         return false;
     }
 
-
-    public override fun onNewIntent(intent: Intent) {
-
+    fun nfcCall() {
         // Get the Tag object:
         // ===================
         // retrieve the action from the received intent
