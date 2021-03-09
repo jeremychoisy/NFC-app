@@ -38,6 +38,13 @@ class NFCWriterActivity : AppCompatActivity() {
     lateinit var inputHeure: EditText
     lateinit var labelText: TextView
     lateinit var spinnerCentre: Spinner
+
+    var mYear: Int = 0
+    var mMonth: Int = 0
+    var mDay: Int = 0
+    var mHour: Int = 0
+    var mMinute: Int = 0
+
     var datePickerDialog: DatePickerDialog? = null
     var timePickerDialog: TimePickerDialog? = null
 
@@ -59,8 +66,9 @@ class NFCWriterActivity : AppCompatActivity() {
         inputLastName = findViewById<EditText>(R.id.input_lastname)
         inputDate = findViewById<EditText>(R.id.input_date)
         inputHeure = findViewById<EditText>(R.id.input_heure)
-        labelText = findViewById<TextView>(R.id.txtView1)
+        labelText = findViewById<TextView>(R.id.readNfcInfo)
         spinnerCentre = findViewById<Spinner>(R.id.spinner_centre)
+
 
         var list = arrayOf("Service de vaccination, Nice",
                 "Maison des associations, Antibes",
@@ -71,9 +79,9 @@ class NFCWriterActivity : AppCompatActivity() {
 
         inputDate.setOnClickListener(View.OnClickListener {
             val c = Calendar.getInstance()
-            val mYear = c[Calendar.YEAR]
-            val mMonth = c[Calendar.MONTH]
-            val mDay = c[Calendar.DAY_OF_MONTH]
+            mYear = c[Calendar.YEAR]
+            mMonth = c[Calendar.MONTH]
+            mDay = c[Calendar.DAY_OF_MONTH]
             datePickerDialog = DatePickerDialog(this@NFCWriterActivity,
                     object : DatePickerDialog.OnDateSetListener {
                         override fun onDateSet(view: DatePicker?, year: Int,
@@ -87,8 +95,8 @@ class NFCWriterActivity : AppCompatActivity() {
 
         inputHeure.setOnClickListener(View.OnClickListener {
             val c = Calendar.getInstance()
-            val mHour = c[Calendar.HOUR_OF_DAY]
-            val mMinute = c[Calendar.MINUTE]
+            mHour = c[Calendar.HOUR_OF_DAY]
+            mMinute = c[Calendar.MINUTE]
             timePickerDialog = TimePickerDialog(this@NFCWriterActivity,
                     TimePickerDialog.OnTimeSetListener {
                         view, hour, minute -> inputHeure.setText("$hour:$minute")
@@ -108,18 +116,20 @@ class NFCWriterActivity : AppCompatActivity() {
             val name = "" + inputName.text.trim() + " " + inputLastName.text.trim()
             val site = spinnerCentre.selectedItem.toString()
             //TODO: update when datepicker is setup
-            val date = Date()
+
+            val date = Date(mYear, mMonth, mDay, mHour, mMinute)
+
             createMeeting(name, site, date).observe(this, Observer { it ->
                 it?.let { resource ->
                     when (resource.status) {
                         SUCCESS -> {
                             meetingId = resource.data?.meeting?._id
-                            labelText.text = "Rendez-vous créé avec succès"
+                            labelText.text = "Rendez-vous créé avec succès, scannnez votre carte."
                             labelText.visibility = View.VISIBLE
                             // TODO: Hide spinner
                         }
                         ERROR -> {
-                            labelText.text = resource.message
+                            labelText.text = "Un rendez-vous a déjà été pris sur cette période."
                             // TODO: Hide spinner
                         }
                         LOADING -> {

@@ -20,7 +20,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:title="VaccinRDV" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -29,17 +30,18 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/verif_ident"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/app_bar" />
+        app:layout_constraintEnd_toEndOf="@+id/btn_write_tag"
+        app:layout_constraintStart_toStartOf="@+id/btn_write_tag"
+        app:layout_constraintTop_toBottomOf="@+id/btn_write_tag" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_write_tag"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/nfc_prise_rdv"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_read_tag" />
+        app:layout_constraintTop_toBottomOf="@+id/app_bar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

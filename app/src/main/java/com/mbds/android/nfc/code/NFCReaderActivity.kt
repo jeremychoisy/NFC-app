@@ -7,6 +7,8 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.os.Bundle
+import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -23,9 +25,14 @@ class NFCReaderActivity : AppCompatActivity() {
 
     private var nfcAdapter: NfcAdapter? = null
     private var pendingIntent: PendingIntent? = null
+
+    lateinit var labelTextRead: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.read_tag_layout)
+
+        labelTextRead = findViewById<TextView>(R.id.readNfcInfo)
 
         // Get default NfcAdapter and PendingIntent instances
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
@@ -143,10 +150,11 @@ class NFCReaderActivity : AppCompatActivity() {
                                 it?.let { resource ->
                                     when (resource.status) {
                                         Status.SUCCESS -> {
-                                            Toast.makeText(this, "Rendez-vous valide", Toast.LENGTH_SHORT).show()
+                                            labelTextRead.text = " Rendez-vous valide, dirigez vous vers l'acceuil."
+                                            print("MESSSSSAGGGE")
                                             deleteMeeting(recordTxt).observe(this, Observer {
                                                 if(resource.status == Status.SUCCESS) {
-                                                    Toast.makeText(this, "Accès révoqué", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(this, "Votre carte ne contient plus de rendez-vous.", Toast.LENGTH_SHORT).show()
                                                     // TODO: Hide spinner
                                                 } else {
                                                     Toast.makeText(this, "Échec de la suppression du rendez-vous", Toast.LENGTH_SHORT).show()
@@ -156,6 +164,7 @@ class NFCReaderActivity : AppCompatActivity() {
                                         }
                                         Status.ERROR -> {
                                             Toast.makeText(this, "Rendez-vous non valide", Toast.LENGTH_SHORT).show()
+                                            labelTextRead.text = "Le rendez-vous associé à cette carte n'est pas valide."
                                         }
                                         Status.LOADING -> {
                                             // TODO: Show spinner
