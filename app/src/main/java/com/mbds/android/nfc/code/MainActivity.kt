@@ -29,42 +29,6 @@ class MainActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         handleActions()
-        // TODO: Remove, only for example purpose
-        createMeeting().observe(this, Observer { it ->
-            it?.let { resource ->
-                when (resource.status) {
-                    SUCCESS -> {
-                        resource.data?.let { it -> Log.v("RESPONSE", it.meeting._id)}
-                        // TODO: Hide spinner
-                    }
-                    ERROR -> {
-                        resource.message?.let { errorMessage -> Log.v("RESPONSE", errorMessage)}
-                        // TODO: Hide spinner
-                    }
-                    LOADING -> {
-                        // TODO: Display spinner
-                    }
-                }
-            }
-        })
-        // TODO: Remove, only for example purpose
-        /* fetchMeeting().observe(this, Observer { it ->
-            it?.let { resource ->
-                when (resource.status) {
-                    SUCCESS -> {
-                        resource.data?.let { it -> Log.v("RESPONSE", it.meeting._id)}
-                        // TODO: Hide spinner
-                    }
-                    ERROR -> {
-                        resource.message?.let { errorMessage -> Log.v("RESPONSE", errorMessage)}
-                        // TODO: Hide spinner
-                    }
-                    LOADING -> {
-                        // TODO: Display spinner
-                    }
-                }
-            }
-        }) */
     }
 
     private fun handleActions() {
@@ -76,29 +40,6 @@ class MainActivity : AppCompatActivity() {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
-    }
-
-    // TODO: Remove, only for example purpose
-    private fun fetchMeeting() = liveData(Dispatchers.IO) {
-        emit(Resource.loading(data = null))
-        try {
-            emit(Resource.success(data = repository.get("60473513acaf1d0015dde0d9")))
-        } catch (exception: Exception) {
-            emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
-        }
-    }
-
-    // TODO: Remove, only for example purpose
-    private fun createMeeting() = liveData(Dispatchers.IO) {
-        emit(Resource.loading(data = null))
-        try {
-            val name = RequestBody.create(MediaType.parse("text/plain"), "Depuis");
-            val site = RequestBody.create(MediaType.parse("text/plain"), "Nice");
-            val date = RequestBody.create(MediaType.parse("text/plain"), Date().toString());
-            emit(Resource.success(data = repository.create(name, site, date)))
-        } catch (exception: Exception) {
-            emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

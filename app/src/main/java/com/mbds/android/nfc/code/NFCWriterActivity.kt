@@ -2,37 +2,42 @@ package com.mbds.android.nfc.code
 
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.DrawableContainer
 import android.nfc.*
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.AttributeSet
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import java.io.ByteArrayOutputStream
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.liveData
+import com.mbds.android.nfc.code.api.repositories.MeetingRepository
+import com.mbds.android.nfc.code.models.Resource
+import com.mbds.android.nfc.code.models.Status.*
+import kotlinx.coroutines.Dispatchers
+import okhttp3.MediaType
+import okhttp3.RequestBody
 import java.io.IOException
-import java.io.UnsupportedEncodingException
-import java.nio.charset.Charset
-import java.util.*
+import java.util.Date
 
-class NFCWriterActivity : Activity() {
+class NFCWriterActivity : AppCompatActivity() {
+    private val repository = MeetingRepository()
+
     private var nfcAdapter: NfcAdapter? = null
     private var pendingIntent: PendingIntent? = null
+    private var meetingId: String? = null
 
     lateinit var btnConfirm: Button
     lateinit var inputName: EditText
     lateinit var inputLastName: EditText
+    lateinit var inputSite: EditText
     lateinit var labelText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +56,7 @@ class NFCWriterActivity : Activity() {
         btnConfirm = findViewById<Button>(R.id.btn_confirm_rdv)
         inputName = findViewById<EditText>(R.id.input_name)
         inputLastName = findViewById<EditText>(R.id.input_lastname)
+        inputSite = findViewById<EditText>(R.id.input_site)
         labelText = findViewById<TextView>(R.id.txtView1)
 
 
@@ -62,10 +68,42 @@ class NFCWriterActivity : Activity() {
         addCheckInputEvent(inputLastName)
 
         btnConfirm.setOnClickListener {
-            Log.d("btn", "btn debug")
-            labelText.visibility = View.VISIBLE
+            val name = "" + inputName.text + " " + inputLastName.text
+            val site = inputSite.text.toString()
+            //TODO: update when datepicker is setup
+            val date = Date()
+            createMeeting(name, site, date).observe(this, Observer { it ->
+                it?.let { resource ->
+                    when (resource.status) {
+                        SUCCESS -> {
+                            meetingId = resource.data?.meeting?._id
+                            labelText.text = "Rendez-vous créé avec succès"
+                            labelText.visibility = View.VISIBLE
+                            // TODO: Hide spinner
+                        }
+                        ERROR -> {
+                            labelText.text = resource.message
+                            // TODO: Hide spinner
+                        }
+                        LOADING -> {
+                            // TODO: Display spinner
+                        }
+                    }
+                }
+            })
         }
+    }
 
+    private fun createMeeting(name: String, site: String, date: Date) = liveData(Dispatchers.IO) {
+        emit(Resource.loading(data = null))
+        try {
+            val name = RequestBody.create(MediaType.parse("text/plain"), name);
+            val site = RequestBody.create(MediaType.parse("text/plain"), site);
+            val date = RequestBody.create(MediaType.parse("text/plain"), date.toString());
+            emit(Resource.success(data = repository.create(name, site, date)))
+        } catch (exception: Exception) {
+            emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
+        }
     }
 
 
@@ -120,114 +158,81 @@ class NFCWriterActivity : Activity() {
 
 
     public override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
 
-        // Get the Tag object:
-        // ===================
-        // retrieve the action from the received intent
-        val action = intent.action
-        // check the event was triggered by the tag discovery
-        if (NfcAdapter.ACTION_TAG_DISCOVERED == action || NfcAdapter.ACTION_TECH_DISCOVERED == action || NfcAdapter.ACTION_NDEF_DISCOVERED == action) {
+        if (meetingId != null) {
 
-            // get the tag object from the received intent
-            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+            // Get the Tag object:
+            // ===================
+            // retrieve the action from the received intent
+            val action = intent.action
+            // check the event was triggered by the tag discovery
+            if (NfcAdapter.ACTION_TAG_DISCOVERED == action || NfcAdapter.ACTION_TECH_DISCOVERED == action || NfcAdapter.ACTION_NDEF_DISCOVERED == action) {
 
-            // create the NDEF mesage:
-            // ========================
-            // dimension is the int number of entries of ndefRecords:
-            val dimension = 1
-            val ndefRecords = arrayOfNulls<NdefRecord>(dimension)
-            // Example with an URI NDEF record:
-            val uriTxt = "http://www.mbds-fr.org" // your URI in String format
-            var ndefRecord = NdefRecord.createUri(uriTxt)
-            // Add the record to the NDEF message:
-            ndefRecords[0] = ndefRecord
-            val ndefMessage = NdefMessage(ndefRecords)
+                // get the tag object from the received intent
+                val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
 
-            // Create NDEF message record type MIME:
-            // =====================================
-            val msgTxt = "Hello world!"
-            val mimeType = "application/mbds.android.nfc" // your MIME type
-            ndefRecord = NdefRecord.createMime(
-                    mimeType,
-                    msgTxt.toByteArray(Charset.forName("US-ASCII"))
-            )
-            // NDEF record URI type
-            ndefRecord = NdefRecord.createUri(uriTxt)
+                // create the NDEF mesage:
+                // ========================
+                // dimension is the int number of entries of ndefRecords:
+                val dimension = 1
+                val ndefRecords = arrayOfNulls<NdefRecord>(dimension)
+                var ndefRecord = NdefRecord.createTextRecord("FR", meetingId.toString())
+                // Add the record to the NDEF message:
+                ndefRecords[0] = ndefRecord
+                val ndefMessage = NdefMessage(ndefRecords)
 
-            // NDEF record WELL KNOWN type (NFC Forum): TEXT
-            // =============================================
-            var lang = ByteArray(0)
-            var data = ByteArray(0)
-            var langeSize = 0
-            try {
-                lang = Locale.getDefault().language.toByteArray(charset("UTF-8"))
-                langeSize = lang.size
-                data = ByteArray(0)
-            } catch (e: UnsupportedEncodingException) {
-                e.printStackTrace()
-            }
-            try {
-                data = msgTxt.toByteArray(charset("UTF-8"))
-                val dataLength = data.size
-                val payload = ByteArrayOutputStream(1 + langeSize + dataLength)
-                payload.write((langeSize and 0x1F))
-                payload.write(lang, 0, langeSize)
-                ndefRecord = NdefRecord(
-                        NdefRecord.TNF_WELL_KNOWN,
-                        NdefRecord.RTD_TEXT, ByteArray(0),
-                        payload.toByteArray()
-                )
-            } catch (e: UnsupportedEncodingException) {
-                e.printStackTrace()
-            }
 
-            // check and write the tag received:
-            // =================================
-            // check the targeted tag the memory size and is the tag writable
-            val ndef = Ndef.get(tag)
-            val size = ndefMessage.toByteArray().size
-            if (ndef != null) {
-                try {
-                    ndef.connect()
-                    if (!ndef.isWritable) {
-                        // tag is locked in writing!
-                    }
-                    if (ndef.maxSize < size) {
-                        // manage oversize!
-                    }
-                    // write the NDEF message on the tag
-                    ndef.writeNdefMessage(ndefMessage)
-                    ndef.close()
-                    Toast.makeText(this, "Message écrit avec succès", Toast.LENGTH_SHORT).show()
-                } catch (e1: IOException) {
-                    e1.printStackTrace()
-                } catch (e2: FormatException) {
-                    e2.printStackTrace()
-                }
-            }
-
-            // check and write the tag received at activity:
-            // =============================================
-            // is the tag formatted?
-            if (ndef == null) {
-                val format = NdefFormatable.get(tag)
-                if (format != null) {
-                    // can you format the tag?
+                // check and write the tag received:
+                // =================================
+                // check the targeted tag the memory size and is the tag writable
+                val ndef = Ndef.get(tag)
+                val size = ndefMessage.toByteArray().size
+                if (ndef != null) {
                     try {
-                        format.connect()
-                        // Format and write the NDEF message on the tag
-                        format.format(ndefMessage)
-                        // Example of tag locked in writing:
-                        // formatable.formatReadOnly(message);
-                        format.close()
-                        Toast.makeText(this, "Message écrit avec succès", Toast.LENGTH_SHORT).show()
+                        ndef.connect()
+                        if (!ndef.isWritable) {
+                            // tag is locked in writing!
+                        }
+                        if (ndef.maxSize < size) {
+                            // manage oversize!
+                        }
+                        // write the NDEF message on the tag
+                        ndef.writeNdefMessage(ndefMessage)
+                        ndef.close()
+                        Toast.makeText(this, "Rendez-vous écrit avec succès", Toast.LENGTH_SHORT).show()
                     } catch (e1: IOException) {
                         e1.printStackTrace()
                     } catch (e2: FormatException) {
                         e2.printStackTrace()
                     }
                 }
+
+                // check and write the tag received at activity:
+                // =============================================
+                // is the tag formatted?
+                if (ndef == null) {
+                    val format = NdefFormatable.get(tag)
+                    if (format != null) {
+                        // can you format the tag?
+                        try {
+                            format.connect()
+                            // Format and write the NDEF message on the tag
+                            format.format(ndefMessage)
+                            // Example of tag locked in writing:
+                            // formatable.formatReadOnly(message);
+                            format.close()
+                            Toast.makeText(this, "Rendez-vous écrit avec succès", Toast.LENGTH_SHORT).show()
+                        } catch (e1: IOException) {
+                            e1.printStackTrace()
+                        } catch (e2: FormatException) {
+                            e2.printStackTrace()
+                        }
+                    }
+                }
             }
+        } else {
+            Toast.makeText(this, "Vous devez créer un rendez-vous avant de l'écrire sur la carte.", Toast.LENGTH_SHORT).show()
         }
     }
 }
