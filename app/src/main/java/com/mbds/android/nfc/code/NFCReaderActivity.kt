@@ -8,6 +8,8 @@ import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -27,12 +29,15 @@ class NFCReaderActivity : AppCompatActivity() {
     private var pendingIntent: PendingIntent? = null
 
     lateinit var labelTextRead: TextView
+    lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.read_tag_layout)
 
         labelTextRead = findViewById<TextView>(R.id.readNfcInfo)
+        progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        progressBar.visibility = View.GONE
 
         // Get default NfcAdapter and PendingIntent instances
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
@@ -74,6 +79,7 @@ class NFCReaderActivity : AppCompatActivity() {
 
     private fun fetchMeeting(id: String) = liveData(Dispatchers.IO) {
         emit(Resource.loading(data = null))
+        progressBar.visibility = View.VISIBLE
         try {
             emit(Resource.success(data = repository.get(id)))
         } catch (exception: Exception) {
@@ -155,19 +161,22 @@ class NFCReaderActivity : AppCompatActivity() {
                                             deleteMeeting(recordTxt).observe(this, Observer {
                                                 if(resource.status == Status.SUCCESS) {
                                                     Toast.makeText(this, "Votre carte ne contient plus de rendez-vous.", Toast.LENGTH_SHORT).show()
-                                                    // TODO: Hide spinner
+                                                    progressBar.visibility = View.GONE
                                                 } else {
                                                     Toast.makeText(this, "Échec de la suppression du rendez-vous", Toast.LENGTH_SHORT).show()
-                                                    // TODO: Hide spinner
+                                                    progressBar.visibility = View.GONE
+
                                                 }
                                             })
                                         }
                                         Status.ERROR -> {
                                             Toast.makeText(this, "Rendez-vous non valide", Toast.LENGTH_SHORT).show()
+                                            progressBar.visibility = View.GONE
                                             labelTextRead.text = "Le rendez-vous associé à cette carte n'est pas valide."
                                         }
                                         Status.LOADING -> {
-                                            // TODO: Show spinner
+                                            progressBar.visibility = View.VISIBLE
+
                                         }
                                     }
                                 }

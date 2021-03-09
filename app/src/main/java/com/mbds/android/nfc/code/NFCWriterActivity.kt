@@ -38,6 +38,7 @@ class NFCWriterActivity : AppCompatActivity() {
     lateinit var inputHeure: EditText
     lateinit var labelText: TextView
     lateinit var spinnerCentre: Spinner
+    lateinit var progressBar: ProgressBar
 
     var mYear: Int = 0
     var mMonth: Int = 0
@@ -68,7 +69,8 @@ class NFCWriterActivity : AppCompatActivity() {
         inputHeure = findViewById<EditText>(R.id.input_heure)
         labelText = findViewById<TextView>(R.id.readNfcInfo)
         spinnerCentre = findViewById<Spinner>(R.id.spinner_centre)
-
+        progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        progressBar.visibility = View.GONE
 
         var list = arrayOf("Service de vaccination, Nice",
                 "Maison des associations, Antibes",
@@ -126,14 +128,16 @@ class NFCWriterActivity : AppCompatActivity() {
                             meetingId = resource.data?.meeting?._id
                             labelText.text = "Rendez-vous créé avec succès, scannnez votre carte."
                             labelText.visibility = View.VISIBLE
-                            // TODO: Hide spinner
+                            progressBar.visibility = View.GONE
+
                         }
                         ERROR -> {
                             labelText.text = "Un rendez-vous a déjà été pris sur cette période."
-                            // TODO: Hide spinner
+                            progressBar.visibility = View.GONE
                         }
                         LOADING -> {
-                            // TODO: Display spinner
+                            progressBar.visibility = View.VISIBLE
+
                         }
                     }
                 }
@@ -143,6 +147,7 @@ class NFCWriterActivity : AppCompatActivity() {
 
     private fun createMeeting(name: String, site: String, date: Date) = liveData(Dispatchers.IO) {
         emit(Resource.loading(data = null))
+        progressBar.visibility = View.VISIBLE
         try {
             val name = RequestBody.create(MediaType.parse("text/plain"), name);
             val site = RequestBody.create(MediaType.parse("text/plain"), site);
